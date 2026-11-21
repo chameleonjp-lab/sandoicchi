@@ -1,0 +1,2457 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#f4d28a">
+  <title>3度一致｜サンドイッチを作ろう</title>
+  <link rel="canonical" href="https://chameleonjp-lab.github.io/sandoicchi/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="ja_JP" />
+  <meta property="og:url" content="https://chameleonjp-lab.github.io/sandoicchi/" />
+  <meta property="og:title" content="3度一致｜サンドイッチを作ろう" />
+  <meta property="og:description" content="パン、具、パンを投げて、風を読みながらお皿の上に重ねるブラウザゲーム。" />
+  <meta property="og:image" content="https://chameleonjp-lab.github.io/sandoicchi/social-card.jpg" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="「3度一致」のタイトルと、皿の上にパンと具材を重ねるサンドイッチ。" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="3度一致｜サンドイッチを作ろう" />
+  <meta name="twitter:description" content="パン、具、パンを投げて、風を読みながらお皿の上に重ねるブラウザゲーム。" />
+  <meta name="twitter:image" content="https://chameleonjp-lab.github.io/sandoicchi/social-card.jpg" />
+  <meta name="twitter:image:alt" content="「3度一致」のタイトルと、皿の上にパンと具材を重ねるサンドイッチ。" />
+  <style>
+    :root {
+      --bg: #fff7dc;
+      --panel: rgba(255, 255, 255, 0.9);
+      --ink: #2f2118;
+      --muted: #725d4e;
+      --accent: #e47d32;
+      --accent2: #5b9d6b;
+      --danger: #c94a42;
+      --line: rgba(86, 57, 31, 0.2);
+      --shadow: 0 14px 34px rgba(88, 48, 16, 0.18);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-top: env(safe-area-inset-top, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      background: radial-gradient(circle at top, #fff9e6 0%, #f4d28a 42%, #d59149 100%);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: none;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+    }
+
+    button,
+    input,
+    a {
+      font: inherit;
+    }
+
+    a {
+      color: inherit;
+      touch-action: manipulation;
+      -webkit-touch-callout: default;
+    }
+
+    input {
+      user-select: text;
+      -webkit-user-select: text;
+      -webkit-touch-callout: default;
+    }
+
+    .app {
+      width: 100%;
+      height: 100dvh;
+      max-width: 520px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255, 252, 232, 0.96), rgba(241, 188, 101, 0.9));
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.4), 0 0 40px rgba(57, 33, 13, 0.16);
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: none;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: calc(16px + var(--safe-top)) 16px calc(18px + var(--safe-bottom));
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid rgba(90, 58, 29, 0.18);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .home-stack {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .title-mark {
+      width: 92px;
+      height: 92px;
+      border-radius: 28px;
+      margin: 0 auto 8px;
+      background: linear-gradient(160deg, #ffe1a5, #f39a48);
+      display: grid;
+      place-items: center;
+      font-size: 44px;
+      box-shadow: inset 0 -10px 18px rgba(122, 65, 26, 0.12), 0 12px 24px rgba(111, 61, 19, 0.22);
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: clamp(34px, 11vw, 54px);
+      line-height: 1;
+      margin-bottom: 8px;
+      letter-spacing: -0.04em;
+    }
+
+    h2 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .lead {
+      color: var(--muted);
+      text-align: center;
+      font-size: 16px;
+      line-height: 1.7;
+      margin-bottom: 18px;
+    }
+
+    .button-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .btn {
+      min-height: 46px;
+      border: 0;
+      border-radius: 15px;
+      padding: 12px 14px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 800;
+      box-shadow: 0 4px 0 rgba(70, 42, 20, 0.16), 0 10px 20px rgba(70, 42, 20, 0.12);
+      touch-action: manipulation;
+      cursor: pointer;
+    }
+
+    .btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 rgba(70, 42, 20, 0.16), 0 5px 10px rgba(70, 42, 20, 0.1);
+    }
+
+    .btn.primary {
+      background: linear-gradient(180deg, #ff9c43, #e87628);
+      color: #fff;
+    }
+
+    .btn.secondary {
+      background: #fff7df;
+    }
+
+    .btn.danger {
+      background: #fff0ed;
+      color: var(--danger);
+    }
+
+    .btn.ghost {
+      background: rgba(255, 255, 255, 0.66);
+      box-shadow: none;
+      border: 1px solid rgba(81, 52, 30, 0.17);
+    }
+
+    .small-note {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .rules-list {
+      display: grid;
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .rule-item {
+      padding: 12px;
+      background: rgba(255, 247, 221, 0.75);
+      border: 1px solid rgba(103, 70, 34, 0.12);
+      border-radius: 16px;
+      line-height: 1.65;
+    }
+
+    .name-box {
+      width: 100%;
+      min-height: 52px;
+      padding: 12px 14px;
+      border-radius: 15px;
+      border: 2px solid rgba(80, 51, 28, 0.18);
+      background: #fff;
+      color: var(--ink);
+      font-size: 18px;
+      outline: none;
+      touch-action: manipulation;
+    }
+
+    .name-box:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(228, 125, 50, 0.18);
+    }
+
+    #screenGame {
+      padding: calc(8px + var(--safe-top)) 10px calc(10px + var(--safe-bottom));
+      overflow: hidden;
+    }
+
+    .game-layout {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .hud {
+      flex: 0 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .hud-box {
+      min-height: 44px;
+      padding: 7px 9px;
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(84, 53, 28, 0.13);
+      box-shadow: 0 6px 14px rgba(77, 43, 15, 0.08);
+      line-height: 1.15;
+    }
+
+    .hud-label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+
+    .hud-value {
+      display: block;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      white-space: nowrap;
+    }
+
+    .retire-btn {
+      min-width: 54px;
+      min-height: 44px;
+      padding: 8px 10px;
+      border-radius: 15px;
+      border: 0;
+      background: rgba(255, 236, 232, 0.96);
+      color: var(--danger);
+      font-weight: 900;
+      box-shadow: 0 4px 0 rgba(134, 53, 44, 0.13);
+    }
+
+    .canvas-shell {
+      position: relative;
+      flex: 1 1 auto;
+      min-height: 320px;
+      border-radius: 22px;
+      overflow: hidden;
+      border: 1px solid rgba(82, 52, 27, 0.16);
+      background: linear-gradient(180deg, #fff4d6 0%, #e5aa62 100%);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.38), 0 12px 24px rgba(81, 46, 19, 0.16);
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .canvas-status {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 10px;
+      border-radius: 14px;
+      background: rgba(55, 34, 18, 0.68);
+      color: #fff9e8;
+      font-weight: 800;
+      font-size: 13px;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .controls {
+      flex: 0 0 auto;
+      display: grid;
+      grid-template-columns: minmax(138px, 1fr) 116px;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .pad-wrap {
+      min-height: 104px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.75);
+      border: 1px solid rgba(92, 58, 28, 0.16);
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      gap: 10px;
+      align-items: center;
+      box-shadow: 0 8px 18px rgba(78, 45, 18, 0.1);
+    }
+
+    .aim-pad {
+      width: 96px;
+      height: 84px;
+      border-radius: 20px;
+      position: relative;
+      background: radial-gradient(circle at center, #fff 0 12%, #ffe8bc 13% 100%);
+      border: 2px solid rgba(90, 55, 25, 0.16);
+      touch-action: none;
+      box-shadow: inset 0 0 14px rgba(90, 56, 25, 0.12);
+    }
+
+    .aim-pad::before,
+    .aim-pad::after {
+      content: "";
+      position: absolute;
+      background: rgba(87, 54, 26, 0.16);
+      pointer-events: none;
+    }
+
+    .aim-pad::before {
+      left: 50%;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      transform: translateX(-50%);
+    }
+
+    .aim-pad::after {
+      top: 50%;
+      left: 8px;
+      right: 8px;
+      height: 2px;
+      transform: translateY(-50%);
+    }
+
+    .aim-knob {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 30px;
+      height: 30px;
+      margin-left: -15px;
+      margin-top: -15px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ff9b43, #dc6d20);
+      box-shadow: 0 5px 10px rgba(92, 51, 20, 0.2);
+      pointer-events: none;
+    }
+
+    .control-help {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .control-help strong {
+      display: block;
+      color: var(--ink);
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .throw-btn {
+      min-height: 104px;
+      border: 0;
+      border-radius: 20px;
+      background: linear-gradient(180deg, #5fae72, #3b8750);
+      color: #fff;
+      font-size: 20px;
+      font-weight: 950;
+      box-shadow: 0 6px 0 rgba(33, 91, 50, 0.35), 0 12px 20px rgba(50, 91, 36, 0.18);
+      touch-action: manipulation;
+    }
+
+    .throw-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 3px 0 rgba(33, 91, 50, 0.35), 0 6px 10px rgba(50, 91, 36, 0.14);
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .result-stat {
+      background: rgba(255, 247, 221, 0.78);
+      border: 1px solid rgba(95, 61, 30, 0.12);
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .result-stat span {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .result-stat strong {
+      font-size: 22px;
+      letter-spacing: -0.03em;
+    }
+
+    .ranking-box {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.62);
+      border: 1px solid rgba(95, 61, 30, 0.13);
+    }
+
+    .ranking-row {
+      display: grid;
+      grid-template-columns: 48px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px dashed rgba(90, 60, 33, 0.18);
+      font-size: 13px;
+    }
+
+    .ranking-row:last-child {
+      border-bottom: 0;
+    }
+
+    .rank-no {
+      font-weight: 900;
+      color: var(--accent);
+    }
+
+    .rank-score {
+      font-weight: 900;
+    }
+
+    .ranking-meta {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .submission-detail {
+      margin-top: 6px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(255, 248, 225, 0.72);
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .toast {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: calc(16px + var(--safe-bottom));
+      padding: 12px 14px;
+      border-radius: 16px;
+      color: #fff;
+      background: rgba(45, 30, 18, 0.88);
+      text-align: center;
+      font-weight: 800;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index: 20;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .debug {
+      position: absolute;
+      top: calc(8px + var(--safe-top));
+      left: 8px;
+      z-index: 30;
+      padding: 6px 7px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.62);
+      color: #fff;
+      font: 10px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;
+      white-space: pre;
+      pointer-events: none;
+      display: none;
+    }
+
+    .debug.active {
+      display: block;
+    }
+
+    @media (max-width: 390px) {
+      .screen {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+      .hud {
+        gap: 6px;
+      }
+      .hud-box {
+        padding-left: 7px;
+        padding-right: 7px;
+      }
+      .hud-value {
+        font-size: 16px;
+      }
+      .controls {
+        grid-template-columns: 1fr 104px;
+        gap: 8px;
+      }
+      .pad-wrap {
+        grid-template-columns: 86px 1fr;
+        min-height: 96px;
+        padding: 8px;
+      }
+      .aim-pad {
+        width: 86px;
+        height: 78px;
+      }
+      .throw-btn {
+        min-height: 96px;
+        font-size: 18px;
+      }
+      .control-help {
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="app" class="app" aria-live="polite">
+    <section id="screenHome" class="screen active">
+      <div class="home-stack">
+        <div class="card">
+          <div class="title-mark" aria-hidden="true">🥪</div>
+          <h1>3度一致</h1>
+          <p class="lead">パン、具、パンを投げて、皿の上にサンドイッチを積み上げます。風と奥行きを読んで、60秒で高得点を目指します。</p>
+          <div class="button-grid">
+            <button id="btnGoName" class="btn primary" type="button">ゲーム開始</button>
+            <button id="btnRules" class="btn secondary" type="button">ルール説明</button>
+            <button id="btnShareHome" class="btn ghost" type="button">ゲームをシェア</button>
+            <a id="homeOtherGames" class="btn ghost" href="https://chameleonjp.codeberg.page/chameleonjp_lab/" rel="noopener">他のゲームで遊ぶ</a>
+          </div>
+          <p id="homeRankingStatus" class="small-note" style="margin:14px 0 0;">ランキングは結果画面で確認できます。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="screenRules" class="screen">
+      <div class="card">
+        <h2>ルール</h2>
+        <div class="rules-list">
+          <div class="rule-item">投げる順番は <strong>パン → 具 → パン</strong> です。3つがそろうとサンドイッチが完成します。</div>
+          <div class="rule-item">皿とサンドイッチには奥行きがあります。中央に近く、安定して乗るほど高得点です。</div>
+          <div class="rule-item">風は上下左右と斜めの8方向です。弱・中・強で着地点が変わります。</div>
+          <div class="rule-item">食材は無理やり乗りません。支えが足りないと滑ったり、落ちたりします。</div>
+          <div class="rule-item">60秒で最終スコアを競います。ランキング送信は終了時に自動で1回だけ行います。</div>
+        </div>
+        <div class="button-grid">
+          <button id="btnRulesToName" class="btn primary" type="button">名前入力へ</button>
+          <button id="btnRulesBack" class="btn ghost" type="button">ホームへ戻る</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screenName" class="screen">
+      <div class="home-stack">
+        <div class="card">
+          <h2>名前入力</h2>
+          <p class="lead" style="text-align:left;">ランキングに表示する名前を入力してください。10文字程度がおすすめです。</p>
+          <input id="playerName" class="name-box" type="text" maxlength="12" autocomplete="nickname" inputmode="text" placeholder="名前を入力">
+          <div class="button-grid" style="margin-top:14px;">
+            <button id="btnStartGame" class="btn primary" type="button">この名前で始める</button>
+            <button id="btnNameBack" class="btn ghost" type="button">ホームへ戻る</button>
+          </div>
+          <p class="small-note" style="margin:12px 0 0;">名前はこの端末に保存されます。公式ランキングのスコア本体は端末保存しません。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="screenGame" class="screen">
+      <div class="game-layout">
+        <div class="hud">
+          <div class="hud-box"><span class="hud-label">サンドスコア</span><span id="hudScore" class="hud-value">0点</span></div>
+          <div class="hud-box"><span class="hud-label">残り時間</span><span id="hudTime" class="hud-value">60.0秒</span></div>
+          <button id="btnRetire" class="retire-btn" type="button">リタイア</button>
+        </div>
+        <div class="hud" style="grid-template-columns: 1fr 1fr 1fr;">
+          <div class="hud-box"><span class="hud-label">次の食材</span><span id="hudFood" class="hud-value">パン</span></div>
+          <div class="hud-box"><span class="hud-label">風</span><span id="hudWind" class="hud-value">→ 弱</span></div>
+          <div class="hud-box"><span class="hud-label">完成</span><span id="hudSandwich" class="hud-value">0個</span></div>
+        </div>
+        <div class="canvas-shell">
+          <canvas id="gameCanvas" width="360" height="420" aria-label="3度一致のゲーム画面"></canvas>
+          <div id="canvasStatus" class="canvas-status">狙いを決めて、投げる</div>
+        </div>
+        <div class="controls">
+          <div class="pad-wrap">
+            <div id="aimPad" class="aim-pad" aria-label="狙い調整"><div id="aimKnob" class="aim-knob"></div></div>
+            <div class="control-help"><strong>狙い調整</strong>上下で奥・手前、左右で横位置を調整します。風の分だけ逆にずらすのがコツです。</div>
+          </div>
+          <button id="btnThrow" class="throw-btn" type="button">投げる</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screenResult" class="screen">
+      <div class="card">
+        <h2>結果</h2>
+        <p id="resultMain" class="lead" style="margin-bottom:8px;">サンドスコア：0点</p>
+        <div class="result-grid">
+          <div class="result-stat"><span>完成</span><strong id="resultSandwich">0個</strong></div>
+          <div class="result-stat"><span>きれいな3度一致</span><strong id="resultPerfect">0回</strong></div>
+          <div class="result-stat"><span>はみ出し</span><strong id="resultOverhang">0回</strong></div>
+          <div class="result-stat"><span>落下</span><strong id="resultFalls">0回</strong></div>
+        </div>
+        <div class="result-stat" style="margin-bottom:12px;"><span>最大積み上げ高さ</span><strong id="resultHeight">0段</strong></div>
+        <p id="rankingStatus" class="small-note">ランキング送信を準備しています。</p>
+        <div id="submissionDetail" class="submission-detail">送信後に今回の記録、初回スコア、最高スコアを表示します。</div>
+        <div class="ranking-box">
+          <h3 style="margin-bottom:8px;">ベストランキング</h3>
+          <div id="rankingList" class="small-note">読み込み前です。</div>
+          <div id="playStats" class="small-note" style="margin-top:10px;"></div>
+        </div>
+        <div class="button-grid" style="margin-top:14px;">
+          <button id="btnShareResult" class="btn primary" type="button">結果をシェア</button>
+          <button id="btnRetry" class="btn secondary" type="button">もう一度遊ぶ</button>
+          <button id="btnResultHome" class="btn ghost" type="button">ゲーム終了</button>
+          <a id="resultOtherGames" class="btn ghost" href="https://chameleonjp.codeberg.page/chameleonjp_lab/" rel="noopener">他のゲームで遊ぶ</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="screenError" class="screen">
+      <div class="home-stack">
+        <div class="card">
+          <h2>エラー</h2>
+          <p id="errorText" class="lead" style="text-align:left;">ゲームを開始できませんでした。</p>
+          <button id="btnErrorHome" class="btn primary" type="button">ホームへ戻る</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="debugPanel" class="debug"></div>
+    <div id="toast" class="toast"></div>
+  </main>
+
+  <script>
+  (() => {
+    "use strict";
+
+    // ============================================================
+    // 1. 定数
+    // ============================================================
+    const VERSION = "sandoicchi_db_reset_slug_sandoicchi_v20260618";
+    const DEBUG = false;
+    const GAME_TITLE = "3度一致";
+    const GAME_DESCRIPTION = "サンドイッチを作ろう";
+    const GAME_SLUG = "sandoicchi";
+    const PUBLIC_URL = "https://chameleonjp-lab.github.io/sandoicchi/";
+    const OTHER_GAMES_URL = "https://chameleonjp.codeberg.page/chameleonjp_lab/";
+    const LOCAL_NAME_KEY = "chameleonjp_sandoicchi_player_name";
+    const SCORE_CONFIG = Object.freeze({
+      order: "desc",
+      unit: "点",
+      scale: 1,
+      decimals: 0,
+      label: "サンドスコア",
+      firstLabel: "初回スコア",
+      bestLabel: "最高スコア",
+      topRanking: "best"
+    });
+    const RANKING_LIMIT = 10;
+    const GAME_DURATION = 60;
+    const MAX_PARTICLES = 80;
+    const MAX_UNSTABLE_LAYERS = 6;
+    const DETAIL_LAYER_COUNT = 36;
+    const MAX_LAYERS = 120;
+    const DPR_LIMIT = 2;
+    const THROW_DURATION_MIN = 0.42;
+    const THROW_DURATION_RANDOM = 0.06;
+    const CAMERA_MIN_SCALE = 0.48;
+    const CAMERA_STACK_SCALE_DROP = 0.15;
+
+    const MODE = Object.freeze({
+      HOME: "HOME",
+      RULES: "RULES",
+      NAME: "NAME",
+      READY: "READY",
+      PLAYING: "PLAYING",
+      PAUSED: "PAUSED",
+      RESULT: "RESULT",
+      ERROR: "ERROR"
+    });
+
+    const STEP_LABELS = ["下のパン", "具", "上のパン"];
+
+    const WORLD = Object.freeze({
+      plateRx: 0.92,
+      plateRy: 0.56,
+      plateTopZ: 0.04,
+      throwStartX: 0,
+      throwStartY: 1.38,
+      throwStartZ: 0.18,
+      aimRx: 0.72,
+      aimRy: 0.46
+    });
+
+    const FOOD_PROPS = Object.freeze({
+      bread: {
+        key: "bread",
+        label: "パン",
+        color: "#f3c777",
+        edge: "#cf9143",
+        score: 20,
+        rx: 0.39,
+        ry: 0.255,
+        thickness: 0.105,
+        mass: 1.0,
+        friction: 0.78,
+        slideFactor: 0.36,
+        stableSupport: 0.43,
+        minSupport: 0.22
+      },
+      ham: {
+        key: "ham",
+        label: "ハム",
+        color: "#ef9a9a",
+        edge: "#c66a6a",
+        score: 50,
+        rx: 0.34,
+        ry: 0.22,
+        thickness: 0.045,
+        mass: 0.72,
+        friction: 0.62,
+        slideFactor: 0.48,
+        stableSupport: 0.46,
+        minSupport: 0.24
+      },
+      cheese: {
+        key: "cheese",
+        label: "チーズ",
+        color: "#ffd966",
+        edge: "#d8a52c",
+        score: 60,
+        rx: 0.35,
+        ry: 0.22,
+        thickness: 0.04,
+        mass: 0.68,
+        friction: 0.56,
+        slideFactor: 0.56,
+        stableSupport: 0.49,
+        minSupport: 0.25
+      },
+      tomato: {
+        key: "tomato",
+        label: "トマト",
+        color: "#e45243",
+        edge: "#a72f29",
+        score: 70,
+        rx: 0.315,
+        ry: 0.205,
+        thickness: 0.05,
+        mass: 0.74,
+        friction: 0.46,
+        slideFactor: 0.68,
+        stableSupport: 0.53,
+        minSupport: 0.29
+      },
+      egg: {
+        key: "egg",
+        label: "たまご",
+        color: "#fff0a8",
+        edge: "#ddb94d",
+        score: 80,
+        rx: 0.32,
+        ry: 0.21,
+        thickness: 0.07,
+        mass: 0.9,
+        friction: 0.54,
+        slideFactor: 0.54,
+        stableSupport: 0.5,
+        minSupport: 0.27
+      },
+      cutlet: {
+        key: "cutlet",
+        label: "カツ",
+        color: "#b8793a",
+        edge: "#71421f",
+        score: 95,
+        rx: 0.36,
+        ry: 0.235,
+        thickness: 0.09,
+        mass: 1.22,
+        friction: 0.5,
+        slideFactor: 0.42,
+        stableSupport: 0.52,
+        minSupport: 0.28
+      },
+      avocado: {
+        key: "avocado",
+        label: "アボカド",
+        color: "#86b85a",
+        edge: "#4e7e36",
+        score: 110,
+        rx: 0.325,
+        ry: 0.205,
+        thickness: 0.055,
+        mass: 0.82,
+        friction: 0.42,
+        slideFactor: 0.76,
+        stableSupport: 0.55,
+        minSupport: 0.31
+      }
+    });
+
+    const INGREDIENTS = Object.freeze([
+      FOOD_PROPS.ham,
+      FOOD_PROPS.cheese,
+      FOOD_PROPS.tomato,
+      FOOD_PROPS.egg,
+      FOOD_PROPS.cutlet,
+      FOOD_PROPS.avocado
+    ]);
+
+    const WIND_DIRECTIONS = Object.freeze([
+      { icon: "↑", label: "奥へ", dx: 0, dy: -1 },
+      { icon: "↓", label: "手前へ", dx: 0, dy: 1 },
+      { icon: "←", label: "左へ", dx: -1, dy: 0 },
+      { icon: "→", label: "右へ", dx: 1, dy: 0 },
+      { icon: "↖", label: "左奥へ", dx: -0.707, dy: -0.707 },
+      { icon: "↗", label: "右奥へ", dx: 0.707, dy: -0.707 },
+      { icon: "↙", label: "左手前へ", dx: -0.707, dy: 0.707 },
+      { icon: "↘", label: "右手前へ", dx: 0.707, dy: 0.707 }
+    ]);
+
+    const WIND_STRENGTHS = Object.freeze([
+      { label: "弱", min: 0.085, max: 0.15 },
+      { label: "中", min: 0.22, max: 0.34 },
+      { label: "強", min: 0.42, max: 0.58 }
+    ]);
+
+    // ============================================================
+    // 2. Supabase設定
+    // ============================================================
+    const SUPABASE_URL = "https://mlpnjgezrnhdxsxolyzj.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_drzcy0v97knU6FgjqSgBHw_0A9XPdFM";
+
+    // ============================================================
+    // 3. DOM取得
+    // ============================================================
+    const $ = (id) => document.getElementById(id);
+    const screens = {
+      home: $("screenHome"),
+      rules: $("screenRules"),
+      name: $("screenName"),
+      game: $("screenGame"),
+      result: $("screenResult"),
+      error: $("screenError")
+    };
+
+    const dom = {
+      app: $("app"),
+      canvas: $("gameCanvas"),
+      canvasStatus: $("canvasStatus"),
+      playerName: $("playerName"),
+      hudScore: $("hudScore"),
+      hudTime: $("hudTime"),
+      hudFood: $("hudFood"),
+      hudWind: $("hudWind"),
+      hudSandwich: $("hudSandwich"),
+      aimPad: $("aimPad"),
+      aimKnob: $("aimKnob"),
+      toast: $("toast"),
+      resultMain: $("resultMain"),
+      resultSandwich: $("resultSandwich"),
+      resultPerfect: $("resultPerfect"),
+      resultOverhang: $("resultOverhang"),
+      resultFalls: $("resultFalls"),
+      resultHeight: $("resultHeight"),
+      rankingStatus: $("rankingStatus"),
+      submissionDetail: $("submissionDetail"),
+      rankingList: $("rankingList"),
+      playStats: $("playStats"),
+      errorText: $("errorText"),
+      debugPanel: $("debugPanel"),
+      homeOtherGames: $("homeOtherGames"),
+      resultOtherGames: $("resultOtherGames")
+    };
+
+    const ctx = dom.canvas.getContext("2d", { alpha: false });
+
+    // ============================================================
+    // 4. 状態管理
+    // ============================================================
+    let mode = MODE.HOME;
+    let rafId = 0;
+    let lastFrameTime = 0;
+    let uiUpdateTimer = 0;
+    let rankingSubmitted = false;
+    let audioCtx = null;
+    let lastResult = null;
+    let lastSubmitResponse = null;
+
+    const view = {
+      w: 360,
+      h: 420,
+      dpr: 1,
+      scale: 150,
+      originX: 180,
+      originY: 235
+    };
+
+    const camera = {
+      offsetY: 0,
+      targetOffsetY: 0,
+      scale: 1,
+      targetScale: 1,
+      shiftCount: 0
+    };
+
+    const aim = {
+      x: 0,
+      y: 0,
+      pointerId: null
+    };
+
+    const wind = {
+      icon: "→",
+      label: "右へ",
+      strength: "弱",
+      dx: 1,
+      dy: 0,
+      value: 0.1
+    };
+
+    const projectile = {
+      active: false,
+      t: 0,
+      duration: 0.82,
+      startX: 0,
+      startY: 0,
+      startZ: 0,
+      targetX: 0,
+      targetY: 0,
+      targetZ: 0,
+      x: 0,
+      y: 0,
+      z: 0,
+      rot: 0,
+      spin: 0,
+      prop: FOOD_PROPS.bread,
+      windDx: 0,
+      windDy: 0,
+      windValue: 0
+    };
+
+    const game = {
+      score: 0,
+      timeLeft: GAME_DURATION,
+      elapsed: 0,
+      sandwichCount: 0,
+      perfectCount: 0,
+      overhangCount: 0,
+      fallCount: 0,
+      slideCount: 0,
+      unstableLandingCount: 0,
+      stableHeightLandings: 0,
+      stepIndex: 0,
+      ingredientIndex: 0,
+      layers: [],
+      stackHeight: WORLD.plateTopZ,
+      maxStackHeight: WORLD.plateTopZ,
+      message: "狙いを決めて、投げる",
+      messageTimer: 0,
+      retired: false,
+      playerName: ""
+    };
+
+    const particles = Array.from({ length: MAX_PARTICLES }, () => ({
+      active: false,
+      x: 0,
+      y: 0,
+      z: 0,
+      vx: 0,
+      vy: 0,
+      vz: 0,
+      life: 0,
+      maxLife: 0,
+      size: 1,
+      color: "#fff"
+    }));
+
+    const debug = {
+      fps: 0,
+      frames: 0,
+      time: 0
+    };
+
+    // ============================================================
+    // 5. 入力処理
+    // ============================================================
+    function bindEvents() {
+      $("btnGoName").addEventListener("click", () => showScreen(MODE.NAME));
+      $("btnRules").addEventListener("click", () => showScreen(MODE.RULES));
+      $("btnRulesToName").addEventListener("click", () => showScreen(MODE.NAME));
+      $("btnRulesBack").addEventListener("click", () => showScreen(MODE.HOME));
+      $("btnNameBack").addEventListener("click", () => showScreen(MODE.HOME));
+      $("btnStartGame").addEventListener("click", handleStartFromName);
+      $("btnThrow").addEventListener("pointerdown", (event) => {
+        if (mode !== MODE.PLAYING) return;
+        event.preventDefault();
+        throwCurrentFood();
+      });
+      $("btnThrow").addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        throwCurrentFood();
+      });
+      $("btnRetire").addEventListener("click", retireGame);
+      $("btnRetry").addEventListener("click", () => showScreen(MODE.NAME));
+      $("btnResultHome").addEventListener("click", () => showScreen(MODE.HOME));
+      $("btnErrorHome").addEventListener("click", () => showScreen(MODE.HOME));
+      $("btnShareHome").addEventListener("click", () => shareText(buildHomeShareText()));
+      $("btnShareResult").addEventListener("click", () => shareText(buildResultShareText(lastResult)));
+
+      dom.homeOtherGames.href = OTHER_GAMES_URL;
+      dom.resultOtherGames.href = OTHER_GAMES_URL;
+
+      dom.playerName.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") handleStartFromName();
+      });
+
+      dom.aimPad.addEventListener("pointerdown", onAimPointerDown);
+      dom.aimPad.addEventListener("pointermove", onAimPointerMove);
+      dom.aimPad.addEventListener("pointerup", onAimPointerUp);
+      dom.aimPad.addEventListener("pointercancel", onAimPointerUp);
+
+      window.addEventListener("resize", () => {
+        resizeCanvas();
+        if (mode === MODE.PLAYING) drawScene();
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden && mode === MODE.PLAYING) {
+          finishGame(false, "画面が非表示になったため終了しました");
+        }
+      });
+
+      blockMobileGestures();
+    }
+
+    function onAimPointerDown(event) {
+      if (mode !== MODE.PLAYING) return;
+      event.preventDefault();
+      aim.pointerId = event.pointerId;
+      dom.aimPad.setPointerCapture(event.pointerId);
+      updateAimFromPointer(event);
+    }
+
+    function onAimPointerMove(event) {
+      if (mode !== MODE.PLAYING || aim.pointerId !== event.pointerId) return;
+      event.preventDefault();
+      updateAimFromPointer(event);
+    }
+
+    function onAimPointerUp(event) {
+      if (aim.pointerId !== event.pointerId) return;
+      event.preventDefault();
+      aim.pointerId = null;
+    }
+
+    function updateAimFromPointer(event) {
+      const rect = dom.aimPad.getBoundingClientRect();
+      const nx = clamp((event.clientX - rect.left) / rect.width * 2 - 1, -1, 1);
+      const ny = clamp((event.clientY - rect.top) / rect.height * 2 - 1, -1, 1);
+      aim.x = nx;
+      aim.y = ny;
+      updateAimKnob();
+    }
+
+    function updateAimKnob() {
+      const left = 50 + aim.x * 36;
+      const top = 50 + aim.y * 36;
+      dom.aimKnob.style.left = `${left}%`;
+      dom.aimKnob.style.top = `${top}%`;
+    }
+
+    function blockMobileGestures() {
+      let lastTouchEnd = 0;
+
+      document.addEventListener("gesturestart", (event) => event.preventDefault(), { passive: false });
+      document.addEventListener("gesturechange", (event) => event.preventDefault(), { passive: false });
+      document.addEventListener("gestureend", (event) => event.preventDefault(), { passive: false });
+
+      document.addEventListener("touchmove", (event) => {
+        if (event.touches.length > 1) event.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener("touchend", (event) => {
+        const now = Date.now();
+        if (now - lastTouchEnd < 330 && !event.target.closest("input, textarea, a")) {
+          event.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, { passive: false });
+
+      document.addEventListener("contextmenu", (event) => {
+        if (!event.target.closest("input, textarea, a")) event.preventDefault();
+      });
+    }
+
+    // ============================================================
+    // 6. ゲーム初期化
+    // ============================================================
+    function showScreen(nextMode) {
+      stopLoop();
+      mode = nextMode;
+      Object.values(screens).forEach((screen) => screen.classList.remove("active"));
+
+      if (nextMode === MODE.HOME) screens.home.classList.add("active");
+      if (nextMode === MODE.RULES) screens.rules.classList.add("active");
+      if (nextMode === MODE.NAME) {
+        screens.name.classList.add("active");
+        const savedName = localStorage.getItem(LOCAL_NAME_KEY) || "";
+        dom.playerName.value = savedName;
+        setTimeout(() => dom.playerName.focus({ preventScroll: true }), 80);
+      }
+      if (nextMode === MODE.GAME || nextMode === MODE.PLAYING) screens.game.classList.add("active");
+      if (nextMode === MODE.RESULT) screens.result.classList.add("active");
+      if (nextMode === MODE.ERROR) screens.error.classList.add("active");
+    }
+
+    function handleStartFromName() {
+      const name = normalizeName(dom.playerName.value);
+      if (!name) {
+        toast("名前を入力してください");
+        return;
+      }
+      localStorage.setItem(LOCAL_NAME_KEY, name);
+      startGame(name);
+    }
+
+    function startGame(name) {
+      try {
+        resetGame(name);
+        mode = MODE.PLAYING;
+        Object.values(screens).forEach((screen) => screen.classList.remove("active"));
+        screens.game.classList.add("active");
+        resizeCanvas();
+        updateHud(true);
+        drawScene();
+        startLoop();
+      } catch (error) {
+        showError("ゲームを開始できませんでした。" + String(error?.message || error));
+      }
+    }
+
+    function resetGame(name) {
+      rankingSubmitted = false;
+      lastSubmitResponse = null;
+      lastResult = null;
+      game.score = 0;
+      game.timeLeft = GAME_DURATION;
+      game.elapsed = 0;
+      game.sandwichCount = 0;
+      game.perfectCount = 0;
+      game.overhangCount = 0;
+      game.fallCount = 0;
+      game.slideCount = 0;
+      game.unstableLandingCount = 0;
+      game.stableHeightLandings = 0;
+      game.stepIndex = 0;
+      game.ingredientIndex = 0;
+      game.layers.length = 0;
+      game.stackHeight = WORLD.plateTopZ;
+      game.maxStackHeight = WORLD.plateTopZ;
+      game.message = "狙いを決めて、投げる";
+      game.messageTimer = 0;
+      game.retired = false;
+      game.playerName = name;
+
+      projectile.active = false;
+      aim.x = 0;
+      aim.y = 0;
+      updateAimKnob();
+      resetCamera();
+      particles.forEach((p) => p.active = false);
+      createWind(true);
+      setMessage("狙いを決めて、投げる", 1.5);
+    }
+
+    function resetCamera() {
+      camera.offsetY = 0;
+      camera.targetOffsetY = 0;
+      camera.scale = 1;
+      camera.targetScale = 1;
+      camera.shiftCount = 0;
+    }
+
+    function resizeCanvas() {
+      const rect = dom.canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, DPR_LIMIT);
+      const width = Math.max(280, Math.floor(rect.width));
+      const height = Math.max(300, Math.floor(rect.height));
+      dom.canvas.width = Math.floor(width * dpr);
+      dom.canvas.height = Math.floor(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      view.w = width;
+      view.h = height;
+      view.dpr = dpr;
+      view.scale = Math.min(width / 2.38, height / 2.25);
+      view.originX = width * 0.5;
+      view.originY = height * 0.55;
+    }
+
+    function startLoop() {
+      stopLoop();
+      lastFrameTime = performance.now();
+      uiUpdateTimer = 0;
+      rafId = requestAnimationFrame(loop);
+    }
+
+    function stopLoop() {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+    }
+
+    // ============================================================
+    // 7. ゲーム更新
+    // ============================================================
+    function loop(now) {
+      if (mode !== MODE.PLAYING) {
+        rafId = 0;
+        return;
+      }
+
+      const dt = Math.min(0.033, Math.max(0, (now - lastFrameTime) / 1000));
+      lastFrameTime = now;
+
+      updateGame(dt);
+      drawScene();
+      updateDebug(dt);
+
+      rafId = requestAnimationFrame(loop);
+    }
+
+    function updateGame(dt) {
+      game.elapsed += dt;
+      game.timeLeft = Math.max(0, GAME_DURATION - game.elapsed);
+      updateCamera(dt);
+      updateProjectile(dt);
+      updateParticles(dt);
+
+      if (game.messageTimer > 0) {
+        game.messageTimer -= dt;
+        if (game.messageTimer <= 0) setMessage("狙いを決めて、投げる", 0);
+      }
+
+      uiUpdateTimer += dt;
+      if (uiUpdateTimer >= 0.1) {
+        updateHud(false);
+        uiUpdateTimer = 0;
+      }
+
+      if (game.timeLeft <= 0) {
+        finishGame(false, "時間切れです");
+      }
+    }
+
+    function updateCamera(dt) {
+      const stackVisualHeight = Math.max(0, game.stackHeight - WORLD.plateTopZ);
+      const oldTargetY = camera.targetOffsetY;
+
+      // 積み上がるほど上へ押し出されるため、以前のように画面全体を上へ動かさない。
+      // まず少し縮小し、それでも上端に近い場合だけ下へ逃がす。
+      const topZ = game.stackHeight + getCurrentFoodProp().thickness * 0.65;
+      const plannedScale = clamp(1 - stackVisualHeight * CAMERA_STACK_SCALE_DROP, CAMERA_MIN_SCALE, 1);
+      const topMargin = Math.max(36, view.h * 0.095);
+      const projectedTopWithoutOffset = view.originY - topZ * view.scale * plannedScale * 0.78;
+      const requiredDownOffset = Math.max(0, topMargin - projectedTopWithoutOffset);
+      const maxDownOffset = view.h * 0.32;
+
+      camera.targetOffsetY = Math.min(maxDownOffset, requiredDownOffset);
+      camera.targetScale = plannedScale;
+
+      if (Math.abs(camera.targetOffsetY - oldTargetY) > 8) camera.shiftCount += 1;
+
+      const smooth = projectile.active ? 5.8 : 8.5;
+      camera.offsetY += (camera.targetOffsetY - camera.offsetY) * Math.min(1, dt * smooth);
+      camera.scale += (camera.targetScale - camera.scale) * Math.min(1, dt * smooth);
+    }
+
+    function updateProjectile(dt) {
+      if (!projectile.active) return;
+
+      projectile.t += dt / projectile.duration;
+      const t = clamp(projectile.t, 0, 1);
+      const ease = t * t * (3 - 2 * t);
+      const arc = Math.sin(Math.PI * t) * (0.72 + Math.min(0.32, game.stackHeight * 0.045));
+      const windCurve = t * t;
+
+      projectile.x = lerp(projectile.startX, projectile.targetX, ease) + projectile.windDx * projectile.windValue * windCurve;
+      projectile.y = lerp(projectile.startY, projectile.targetY, ease) + projectile.windDy * projectile.windValue * windCurve;
+      projectile.z = lerp(projectile.startZ, projectile.targetZ, ease) + arc;
+      projectile.rot += projectile.spin * dt;
+
+      if (t >= 1) {
+        projectile.active = false;
+        handleLanding(projectile.x, projectile.y, projectile.prop);
+      }
+    }
+
+    function updateParticles(dt) {
+      for (const p of particles) {
+        if (!p.active) continue;
+        p.life -= dt;
+        if (p.life <= 0) {
+          p.active = false;
+          continue;
+        }
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.z += p.vz * dt;
+        p.vz -= 1.7 * dt;
+      }
+    }
+
+    function throwCurrentFood() {
+      if (mode !== MODE.PLAYING) return;
+      if (projectile.active) {
+        setMessage("まだ飛んでいます", 0.28);
+        return;
+      }
+
+      unlockAudio();
+      const prop = getCurrentFoodProp();
+      const target = getAimTarget();
+      projectile.active = true;
+      projectile.t = 0;
+      projectile.duration = THROW_DURATION_MIN + Math.random() * THROW_DURATION_RANDOM;
+      projectile.startX = WORLD.throwStartX;
+      projectile.startY = WORLD.throwStartY;
+      projectile.startZ = WORLD.throwStartZ;
+      projectile.targetX = target.x;
+      projectile.targetY = target.y;
+      projectile.targetZ = game.stackHeight + prop.thickness * 0.42;
+      projectile.x = projectile.startX;
+      projectile.y = projectile.startY;
+      projectile.z = projectile.startZ;
+      projectile.rot = (Math.random() - 0.5) * 0.5;
+      projectile.spin = (Math.random() > 0.5 ? 1 : -1) * (5.6 + Math.random() * 4.4);
+      projectile.prop = prop;
+      projectile.windDx = wind.dx;
+      projectile.windDy = wind.dy;
+      projectile.windValue = wind.value;
+
+      setMessage(`${prop.label}を投げた`, 0.28);
+      playTone(240, 0.045, "triangle", 0.08);
+    }
+
+    function retireGame() {
+      if (mode !== MODE.PLAYING) return;
+      const ok = window.confirm("リタイアしますか？ここまでのスコアを送信します。");
+      if (!ok) return;
+      game.retired = true;
+      finishGame(true, "リタイアしました");
+    }
+
+    // ============================================================
+    // 8. 当たり判定
+    // ============================================================
+    function handleLanding(x, y, prop) {
+      const landing = judgeLanding(x, y, prop);
+
+      if (landing.type === "fall") {
+        game.fallCount += 1;
+        const penalty = prop.key === "bread" ? 25 : 45;
+        addScore(-penalty);
+        emitParticles(x, y, Math.max(WORLD.plateTopZ, game.stackHeight), "#6a4a33", 14);
+        setMessage(`${prop.label}が落ちた -${penalty}`, 0.9);
+        playTone(120, 0.09, "sawtooth", 0.07);
+        createWind(false);
+        updateHud(true);
+        return;
+      }
+
+      const layer = settleLayer(landing.x, landing.y, prop, landing);
+      game.layers.push(layer);
+      if (game.layers.length > MAX_LAYERS) {
+        game.layers.splice(0, game.layers.length - MAX_LAYERS);
+      }
+      game.stackHeight = Math.max(game.stackHeight, layer.z + prop.thickness);
+      game.maxStackHeight = Math.max(game.maxStackHeight, game.stackHeight);
+
+      if (landing.type === "overhang") {
+        game.overhangCount += 1;
+        game.unstableLandingCount += 1;
+      }
+      if (landing.slideDistance > 0.03) game.slideCount += 1;
+      if (game.stackHeight > 0.55 && landing.type === "stable") game.stableHeightLandings += 1;
+
+      awardLandingScore(prop, landing, layer);
+      emitParticles(layer.x, layer.y, layer.z + prop.thickness, landing.type === "stable" ? "#fff3b0" : "#f2b36f", landing.type === "stable" ? 18 : 10);
+
+      if (landing.type === "stable") {
+        setMessage(`${prop.label}が乗った +${prop.score}`, 0.65);
+        playTone(420, 0.055, "sine", 0.08);
+      } else {
+        setMessage(`${prop.label}が少しはみ出した`, 0.85);
+        playTone(220, 0.065, "triangle", 0.06);
+      }
+
+      const completed = game.stepIndex === 2;
+      if (completed) {
+        awardSandwichBonus();
+        game.sandwichCount += 1;
+        game.ingredientIndex = Math.min(INGREDIENTS.length - 1, Math.floor(game.sandwichCount / 2));
+        game.stepIndex = 0;
+      } else {
+        game.stepIndex += 1;
+      }
+
+      createWind(false);
+      updateHud(true);
+    }
+
+    function judgeLanding(x, y, prop) {
+      const top = getTopLayer();
+      const plateCenterInside = ellipseValue(x, y, WORLD.plateRx, WORLD.plateRy) <= 1.06;
+      const plateFullInside = ellipseValue(Math.abs(x) + prop.rx * 0.42, Math.abs(y) + prop.ry * 0.42, WORLD.plateRx, WORLD.plateRy) <= 1.03;
+
+      if (!top) {
+        if (!plateCenterInside) return { type: "fall", x, y, support: 0, slideDistance: 0 };
+        const edgePenalty = plateFullInside ? 0 : 1;
+        const type = edgePenalty ? "overhang" : "stable";
+        return { type, x, y, support: plateFullInside ? 1 : 0.52, slideDistance: 0 };
+      }
+
+      let support = calculateSupportArea(x, y, prop, top);
+      let resultX = x;
+      let resultY = y;
+      let slideDistance = 0;
+      const minSupport = prop.minSupport;
+      const stableSupport = prop.stableSupport;
+
+      if (support < minSupport) {
+        return { type: "fall", x, y, support, slideDistance: 0 };
+      }
+
+      let type = support >= stableSupport ? "stable" : "overhang";
+
+      if (type === "overhang") {
+        const slide = applySlideIfUnstable(resultX, resultY, prop, top, support);
+        resultX = slide.x;
+        resultY = slide.y;
+        slideDistance = slide.distance;
+        support = calculateSupportArea(resultX, resultY, prop, top);
+        if (support < minSupport * 0.92) {
+          return { type: "fall", x: resultX, y: resultY, support, slideDistance };
+        }
+      }
+
+      if (!plateCenterInside && support < stableSupport * 1.1) {
+        return { type: "fall", x: resultX, y: resultY, support, slideDistance };
+      }
+
+      if (!plateFullInside) type = "overhang";
+      return { type, x: resultX, y: resultY, support, slideDistance };
+    }
+
+    function calculateSupportArea(x, y, prop, baseLayer) {
+      const dx = Math.abs(x - baseLayer.x);
+      const dy = Math.abs(y - baseLayer.y);
+      const overlapX = clamp((prop.rx + baseLayer.rx - dx) / (prop.rx * 2), 0, 1);
+      const overlapY = clamp((prop.ry + baseLayer.ry - dy) / (prop.ry * 2), 0, 1);
+      const baseTiltPenalty = clamp(Math.abs(baseLayer.tilt || 0) * 0.7, 0, 0.18);
+      return clamp(overlapX * overlapY - baseTiltPenalty, 0, 1);
+    }
+
+    function applySlideIfUnstable(x, y, prop, baseLayer, support) {
+      const dx = x - baseLayer.x;
+      const dy = y - baseLayer.y;
+      const dist = Math.max(0.001, Math.hypot(dx, dy));
+      const slip = prop.slideFactor * (1 - support) * 0.095;
+      const windPush = wind.value * 0.04;
+      const slideX = (dx / dist) * slip + wind.dx * windPush;
+      const slideY = (dy / dist) * slip + wind.dy * windPush;
+      return {
+        x: x + slideX,
+        y: y + slideY,
+        distance: Math.hypot(slideX, slideY)
+      };
+    }
+
+    function settleLayer(x, y, prop, landing) {
+      const previousTop = getTopLayer();
+      const baseZ = game.stackHeight;
+      const offsetX = previousTop ? x - previousTop.x : x;
+      const offsetY = previousTop ? y - previousTop.y : y;
+      const tilt = clamp(offsetX * 0.32 + offsetY * 0.18 + wind.dx * wind.value * 0.12, -0.34, 0.34);
+      const rot = clamp((Math.random() - 0.5) * 0.28 + tilt * 0.35, -0.42, 0.42);
+
+      return {
+        key: prop.key,
+        label: prop.label,
+        x,
+        y,
+        z: baseZ,
+        rx: prop.rx,
+        ry: prop.ry,
+        thickness: prop.thickness,
+        color: prop.color,
+        edge: prop.edge,
+        rot,
+        tilt,
+        support: landing.support,
+        status: landing.type,
+        detailSeed: Math.random()
+      };
+    }
+
+    function getTopLayer() {
+      if (!game.layers.length) return null;
+      return game.layers[game.layers.length - 1];
+    }
+
+    function ellipseValue(x, y, rx, ry) {
+      return (x * x) / (rx * rx) + (y * y) / (ry * ry);
+    }
+
+    // ============================================================
+    // 9. 描画
+    // ============================================================
+    function drawScene() {
+      ctx.clearRect(0, 0, view.w, view.h);
+      drawBackground();
+      drawTable();
+      drawPlateBack();
+      drawStackLayers();
+      drawPrediction();
+      if (projectile.active) drawFood(projectile.prop, projectile.x, projectile.y, projectile.z, projectile.rot, true, true);
+      drawPlateFront();
+      drawParticles();
+      drawWindBadge();
+    }
+
+    function drawBackground() {
+      const g = ctx.createLinearGradient(0, 0, 0, view.h);
+      g.addColorStop(0, "#fff6d9");
+      g.addColorStop(0.55, "#efc27b");
+      g.addColorStop(1, "#bd7d3d");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, view.w, view.h);
+
+      ctx.fillStyle = "rgba(255,255,255,0.18)";
+      for (let i = 0; i < 8; i += 1) {
+        const x = (i * 73 + 28) % view.w;
+        const y = (i * 41 + 20) % Math.max(1, view.h * 0.36);
+        ctx.beginPath();
+        ctx.arc(x, y, 16 + (i % 3) * 7, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawTable() {
+      const backLeft = projectWorldToScreen(-1.35, -0.92, -0.04);
+      const backRight = projectWorldToScreen(1.35, -0.92, -0.04);
+      const frontRight = projectWorldToScreen(1.55, 1.05, -0.04);
+      const frontLeft = projectWorldToScreen(-1.55, 1.05, -0.04);
+
+      const g = ctx.createLinearGradient(0, backLeft.y, 0, frontLeft.y);
+      g.addColorStop(0, "#e9b56a");
+      g.addColorStop(1, "#a96734");
+
+      ctx.beginPath();
+      ctx.moveTo(backLeft.x, backLeft.y);
+      ctx.lineTo(backRight.x, backRight.y);
+      ctx.lineTo(frontRight.x, frontRight.y);
+      ctx.lineTo(frontLeft.x, frontLeft.y);
+      ctx.closePath();
+      ctx.fillStyle = g;
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(76, 45, 20, 0.2)";
+      ctx.lineWidth = 1;
+      for (let i = -2; i <= 2; i += 1) {
+        const a = projectWorldToScreen(i * 0.52, -0.9, -0.035);
+        const b = projectWorldToScreen(i * 0.6, 1.02, -0.035);
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+    }
+
+    function drawPlateBack() {
+      const c = projectWorldToScreen(0, 0, WORLD.plateTopZ - 0.015);
+      const rx = WORLD.plateRx * view.scale * camera.scale;
+      const ry = WORLD.plateRy * view.scale * 0.43 * camera.scale;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(c.x, c.y, rx * 1.06, ry * 1.16, 0, Math.PI, Math.PI * 2);
+      ctx.lineWidth = 16 * camera.scale;
+      ctx.strokeStyle = "rgba(255,255,255,0.7)";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.ellipse(c.x, c.y + ry * 0.03, rx, ry, 0, Math.PI, Math.PI * 2);
+      ctx.fillStyle = "#fbf1da";
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawPlateFront() {
+      const c = projectWorldToScreen(0, 0, WORLD.plateTopZ - 0.015);
+      const rx = WORLD.plateRx * view.scale * camera.scale;
+      const ry = WORLD.plateRy * view.scale * 0.43 * camera.scale;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(c.x, c.y, rx * 1.06, ry * 1.16, 0, 0, Math.PI);
+      ctx.lineWidth = 17 * camera.scale;
+      ctx.strokeStyle = "rgba(255,255,255,0.95)";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.ellipse(c.x, c.y + ry * 0.22, rx * 0.9, ry * 0.42, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(128, 76, 35, 0.12)";
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawStackLayers() {
+      const len = game.layers.length;
+      for (let i = 0; i < len; i += 1) {
+        const layer = game.layers[i];
+        const detailed = i >= Math.max(0, len - DETAIL_LAYER_COUNT);
+        drawFood(layer, layer.x, layer.y, layer.z, layer.rot, detailed, false);
+      }
+    }
+
+    function drawFood(food, x, y, z, rot, detailed, airborne) {
+      const p = projectWorldToScreen(x, y, z);
+      const depth = getDepthScale(y);
+      const rx = food.rx * view.scale * camera.scale * depth;
+      const ry = food.ry * view.scale * 0.45 * camera.scale * depth;
+      const thick = food.thickness * view.scale * 0.35 * camera.scale;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(rot || 0);
+
+      if (!airborne) {
+        ctx.fillStyle = "rgba(63, 38, 18, 0.13)";
+        ctx.beginPath();
+        ctx.ellipse(0, thick + 7 * camera.scale, rx * 0.98, ry * 0.9, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.fillStyle = food.edge || "#bd8952";
+      roundedEllipse(0, thick * 0.65, rx, ry, 0);
+      ctx.fill();
+
+      ctx.fillStyle = food.color || "#f3c777";
+      roundedEllipse(0, 0, rx, ry, 0);
+      ctx.fill();
+      ctx.lineWidth = Math.max(1, 2 * camera.scale);
+      ctx.strokeStyle = "rgba(79, 48, 23, 0.22)";
+      ctx.stroke();
+
+      if (detailed) drawFoodDetails(food, rx, ry);
+
+      if (airborne) {
+        ctx.strokeStyle = "rgba(255,255,255,0.7)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(rx, ry) * 0.45, 0, Math.PI * 1.45);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function roundedEllipse(x, y, rx, ry, rotation) {
+      ctx.beginPath();
+      ctx.ellipse(x, y, Math.max(1, rx), Math.max(1, ry), rotation, 0, Math.PI * 2);
+    }
+
+    function drawFoodDetails(food, rx, ry) {
+      if (food.key === "bread") {
+        ctx.fillStyle = "rgba(138, 82, 29, 0.38)";
+        const dots = [[-0.35, -0.22], [0.12, -0.26], [0.36, 0.06], [-0.08, 0.18], [-0.42, 0.12]];
+        for (const d of dots) {
+          ctx.beginPath();
+          ctx.ellipse(d[0] * rx, d[1] * ry, 2.3 * camera.scale, 1.4 * camera.scale, 0.4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (food.key === "cheese") {
+        ctx.fillStyle = "rgba(255,255,255,0.38)";
+        for (let i = 0; i < 3; i += 1) {
+          ctx.beginPath();
+          ctx.arc((-0.25 + i * 0.24) * rx, (i % 2 ? 0.12 : -0.1) * ry, 3.2 * camera.scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (food.key === "tomato") {
+        ctx.strokeStyle = "rgba(255,236,205,0.45)";
+        ctx.lineWidth = 2 * camera.scale;
+        ctx.beginPath();
+        ctx.moveTo(-rx * 0.55, 0);
+        ctx.lineTo(rx * 0.55, 0);
+        ctx.moveTo(0, -ry * 0.55);
+        ctx.lineTo(0, ry * 0.55);
+        ctx.stroke();
+      } else if (food.key === "egg") {
+        ctx.fillStyle = "rgba(245,178,48,0.74)";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rx * 0.23, ry * 0.32, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (food.key === "cutlet") {
+        ctx.strokeStyle = "rgba(255,228,139,0.33)";
+        ctx.lineWidth = 2 * camera.scale;
+        for (let i = -2; i <= 2; i += 1) {
+          ctx.beginPath();
+          ctx.moveTo(i * rx * 0.2, -ry * 0.65);
+          ctx.lineTo(i * rx * 0.2 + rx * 0.18, ry * 0.55);
+          ctx.stroke();
+        }
+      } else if (food.key === "avocado") {
+        ctx.fillStyle = "rgba(245,244,157,0.56)";
+        ctx.beginPath();
+        ctx.ellipse(rx * 0.1, 0, rx * 0.18, ry * 0.28, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawPrediction() {
+      if (projectile.active || mode !== MODE.PLAYING) return;
+      const prop = getCurrentFoodProp();
+      const target = getAimTarget();
+      const start = projectWorldToScreen(WORLD.throwStartX, WORLD.throwStartY, WORLD.throwStartZ);
+      const end = projectWorldToScreen(target.x, target.y, game.stackHeight + prop.thickness * 0.35);
+      const control = {
+        x: (start.x + end.x) / 2,
+        y: Math.min(start.y, end.y) - view.scale * 0.78 * camera.scale
+      };
+
+      ctx.save();
+      ctx.setLineDash([7, 6]);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "rgba(71, 42, 18, 0.48)";
+      ctx.beginPath();
+      ctx.moveTo(start.x, start.y);
+      ctx.quadraticCurveTo(control.x, control.y, end.x, end.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      drawArrowHead(control.x, control.y, end.x, end.y);
+
+      const landing = getApproxLandingShadow(target, prop);
+      const shadow = projectWorldToScreen(landing.x, landing.y, game.stackHeight + 0.01);
+      const rx = prop.rx * view.scale * camera.scale * 0.6;
+      const ry = prop.ry * view.scale * camera.scale * 0.25;
+      ctx.fillStyle = "rgba(30, 20, 10, 0.22)";
+      ctx.beginPath();
+      ctx.ellipse(shadow.x, shadow.y + 4, rx, ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.9)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(54, 32, 16, 0.62)";
+      ctx.font = `${Math.max(11, 12 * camera.scale)}px system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText("おおよその落下影", shadow.x, shadow.y - 14);
+      ctx.restore();
+    }
+
+    function drawArrowHead(cx, cy, ex, ey) {
+      const angle = Math.atan2(ey - cy, ex - cx);
+      const size = 11 * camera.scale;
+      ctx.save();
+      ctx.translate(ex, ey);
+      ctx.rotate(angle);
+      ctx.fillStyle = "rgba(71, 42, 18, 0.5)";
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-size, -size * 0.55);
+      ctx.lineTo(-size * 0.7, 0);
+      ctx.lineTo(-size, size * 0.55);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawParticles() {
+      for (const p of particles) {
+        if (!p.active) continue;
+        const pos = projectWorldToScreen(p.x, p.y, p.z);
+        const alpha = clamp(p.life / p.maxLife, 0, 1);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, p.size * camera.scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function drawWindBadge() {
+      const x = view.w - 74;
+      const y = 18;
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,0.72)";
+      ctx.strokeStyle = "rgba(83,54,29,0.16)";
+      ctx.lineWidth = 1;
+      roundRect(ctx, x, y, 58, 42, 14);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#2f2118";
+      ctx.font = "900 20px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(wind.icon, x + 18, y + 28);
+      ctx.font = "800 12px system-ui, sans-serif";
+      ctx.fillText(wind.strength, x + 40, y + 27);
+      ctx.restore();
+    }
+
+    function projectWorldToScreen(x, y, z) {
+      const depthScale = getDepthScale(y);
+      const scale = view.scale * camera.scale;
+      return {
+        x: view.originX + x * scale * depthScale,
+        y: view.originY + camera.offsetY + y * scale * 0.43 - z * scale * 0.78,
+        depthScale
+      };
+    }
+
+    function getDepthScale(y) {
+      return clamp(1 + y * 0.13, 0.84, 1.18);
+    }
+
+    // ============================================================
+    // 10. UI更新
+    // ============================================================
+    function updateHud(force) {
+      if (force || dom.hudScore.textContent !== `${game.score}点`) {
+        dom.hudScore.textContent = `${game.score}点`;
+      }
+      dom.hudTime.textContent = `${game.timeLeft.toFixed(1)}秒`;
+      dom.hudFood.textContent = getCurrentFoodLabel();
+      dom.hudWind.textContent = `${wind.icon} ${wind.strength}`;
+      dom.hudSandwich.textContent = `${game.sandwichCount}個`;
+      dom.canvasStatus.textContent = game.message;
+    }
+
+    function setMessage(text, seconds) {
+      game.message = text;
+      game.messageTimer = seconds;
+      dom.canvasStatus.textContent = text;
+    }
+
+    function toast(text) {
+      dom.toast.textContent = text;
+      dom.toast.classList.add("show");
+      window.clearTimeout(toast._timer);
+      toast._timer = window.setTimeout(() => dom.toast.classList.remove("show"), 1800);
+    }
+
+    function showError(text) {
+      stopLoop();
+      mode = MODE.ERROR;
+      dom.errorText.textContent = text;
+      showScreen(MODE.ERROR);
+    }
+
+    // ============================================================
+    // 11. 音
+    // ============================================================
+    function unlockAudio() {
+      if (audioCtx) return;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      audioCtx = new AudioContext();
+    }
+
+    function playTone(freq, duration, type, volume) {
+      if (!audioCtx) return;
+      try {
+        const oscillator = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        oscillator.type = type;
+        oscillator.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume), audioCtx.currentTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        oscillator.connect(gain);
+        gain.connect(audioCtx.destination);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + duration + 0.02);
+      } catch (error) {
+        // 音が鳴らなくてもゲームは止めない。
+      }
+    }
+
+    // ============================================================
+    // 12. 結果処理
+    // ============================================================
+    function finishGame(retired, reason) {
+      if (mode !== MODE.PLAYING) return;
+      stopLoop();
+      mode = MODE.RESULT;
+      projectile.active = false;
+      game.retired = retired;
+      game.timeLeft = Math.max(0, game.timeLeft);
+      game.score = Math.max(0, Math.round(game.score));
+      updateHud(true);
+
+      lastResult = {
+        name: game.playerName,
+        score: game.score,
+        sandwiches: game.sandwichCount,
+        perfect: game.perfectCount,
+        overhang: game.overhangCount,
+        falls: game.fallCount,
+        slides: game.slideCount,
+        maxHeight: Math.max(0, Math.round((game.maxStackHeight - WORLD.plateTopZ) / 0.1)),
+        retired: Boolean(retired),
+        durationMs: Math.round(game.elapsed * 1000),
+        reason
+      };
+
+      renderResult(lastResult);
+      Object.values(screens).forEach((screen) => screen.classList.remove("active"));
+      screens.result.classList.add("active");
+      void submitAndLoadRanking(lastResult);
+    }
+
+    function renderResult(result) {
+      dom.resultMain.textContent = `${result.retired ? "リタイア" : "終了"}：サンドスコア ${result.score}点`;
+      dom.resultSandwich.textContent = `${result.sandwiches}個`;
+      dom.resultPerfect.textContent = `${result.perfect}回`;
+      dom.resultOverhang.textContent = `${result.overhang}回`;
+      dom.resultFalls.textContent = `${result.falls}回`;
+      dom.resultHeight.textContent = `${result.maxHeight}段`;
+      dom.rankingStatus.textContent = "ランキング送信中です。";
+      dom.submissionDetail.textContent = "今回の記録を送信しています。";
+      dom.rankingList.textContent = "ランキングを読み込んでいます。";
+      dom.playStats.textContent = "";
+    }
+
+    function awardLandingScore(prop, landing) {
+      let points = prop.score;
+      const center = 1 - clamp(ellipseValue(landing.x, landing.y, WORLD.plateRx, WORLD.plateRy) / 1.05, 0, 1);
+      points += Math.round(center * 12);
+      points += Math.round(clamp(landing.support, 0, 1) * 8);
+
+      if (landing.type === "overhang") {
+        points -= prop.key === "bread" ? 15 : 30;
+      }
+      if (landing.slideDistance > 0.05) {
+        points -= Math.round(landing.slideDistance * 110);
+      }
+      addScore(points);
+    }
+
+    function awardSandwichBonus() {
+      const trio = game.layers.slice(-3);
+      if (trio.length < 3) return;
+      const cx = (trio[0].x + trio[1].x + trio[2].x) / 3;
+      const cy = (trio[0].y + trio[1].y + trio[2].y) / 3;
+      let spread = 0;
+      let tilt = 0;
+      let support = 0;
+      let unstable = 0;
+      for (const layer of trio) {
+        spread = Math.max(spread, Math.hypot(layer.x - cx, layer.y - cy));
+        tilt += Math.abs(layer.tilt || 0);
+        support += layer.support || 0;
+        if (layer.status !== "stable") unstable += 1;
+      }
+      tilt /= 3;
+      support /= 3;
+
+      let matchBonus = 25;
+      let label = "完成";
+      if (spread < 0.11 && tilt < 0.11 && unstable === 0) {
+        matchBonus = 120;
+        label = "3度一致 大成功";
+        game.perfectCount += 1;
+        emitParticles(cx, cy, game.stackHeight + 0.12, "#fff8a8", 26);
+        playTone(660, 0.09, "sine", 0.08);
+      } else if (spread < 0.22 && tilt < 0.2 && support > 0.48) {
+        matchBonus = 60;
+        label = "3度一致 成功";
+        playTone(520, 0.075, "sine", 0.07);
+      } else if (unstable > 0) {
+        matchBonus = 10;
+        label = "不安定完成";
+      }
+
+      const heightBonus = Math.round(Math.max(0, game.stackHeight - 0.35) * 16);
+      const stackBonus = Math.max(0, game.sandwichCount + 1) * 15;
+      const total = 100 + matchBonus + stackBonus + heightBonus;
+      addScore(total);
+      setMessage(`${label} +${total}`, 1.05);
+    }
+
+    function addScore(delta) {
+      game.score = Math.max(0, Math.round(game.score + delta));
+      if (delta !== 0) {
+        const top = getTopLayer();
+        emitScoreParticle(delta, top ? top.x : 0, top ? top.y : 0, game.stackHeight + 0.18);
+      }
+    }
+
+    // ============================================================
+    // 13. ランキング送信
+    // ============================================================
+    async function submitAndLoadRanking(result) {
+      if (rankingSubmitted) return;
+      rankingSubmitted = true;
+
+      try {
+        const submitResult = await submitScore(result);
+        lastSubmitResponse = submitResult;
+        renderSubmitResult(submitResult, result);
+      } catch (error) {
+        console.warn(error);
+        dom.rankingStatus.textContent = "ランキング送信に失敗しました。結果はこの画面で確認できます。";
+        dom.submissionDetail.textContent = "通信に失敗したため、今回の記録は画面上の結果だけ確認できます。";
+      }
+
+      try {
+        const ranking = await fetchBestRanking();
+        renderRanking(ranking);
+      } catch (error) {
+        console.warn(error);
+        dom.rankingList.textContent = "ランキングを読み込めませんでした。";
+      }
+
+      try {
+        const stats = await fetchPlayStats();
+        renderPlayStats(stats);
+      } catch (error) {
+        console.warn(error);
+        dom.playStats.textContent = "";
+      }
+    }
+
+    async function submitScore(result) {
+      assertSupabaseReady();
+      const response = await callRpc("submit_score", {
+        p_display_name: result.name,
+        p_game_slug: GAME_SLUG,
+        p_score: result.score,
+        p_client_version: VERSION
+      });
+      return normalizeSubmitResult(response, result);
+    }
+
+    async function callRpc(functionName, payload) {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${functionName}`, {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_PUBLISHABLE_KEY,
+          "Authorization": `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+          "Content-Type": "application/json",
+          "Prefer": "return=representation"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        throw new Error(`${functionName} failed: ${response.status} ${text}`);
+      }
+
+      if (response.status === 204) return null;
+      return response.json();
+    }
+
+    function assertSupabaseReady() {
+      if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY || SUPABASE_PUBLISHABLE_KEY.length < 20) {
+        throw new Error("Supabase設定が不足しています");
+      }
+    }
+
+    function firstRow(data) {
+      if (Array.isArray(data)) return data[0] || null;
+      return data || null;
+    }
+
+    function normalizeSubmitResult(data, fallbackResult) {
+      const row = firstRow(data) || {};
+      return {
+        accepted: row.accepted !== false,
+        normalizedName: row.result_normalized_name ?? row.normalized_name ?? normalizeName(fallbackResult.name),
+        displayName: row.result_display_name ?? row.display_name ?? fallbackResult.name,
+        firstScore: numberOr(row.result_first_score ?? row.first_score, fallbackResult.score),
+        bestScore: numberOr(row.result_best_score ?? row.best_score, fallbackResult.score),
+        playCount: numberOr(row.result_play_count ?? row.play_count, 1),
+        isFirstPlay: Boolean(row.is_first_play),
+        isNewBest: Boolean(row.is_new_best)
+      };
+    }
+
+    function renderSubmitResult(submitResult, result) {
+      if (!submitResult.accepted) {
+        dom.rankingStatus.textContent = "ランキングには登録されませんでした。";
+        dom.submissionDetail.textContent = `今回の記録：${formatScore(result.score)}`;
+        return;
+      }
+
+      const labels = [];
+      if (submitResult.isFirstPlay) labels.push("初回記録");
+      if (submitResult.isNewBest) labels.push("自己ベスト更新");
+      dom.rankingStatus.textContent = labels.length
+        ? `ランキングへ送信しました（${labels.join(" / ")}）。`
+        : "ランキングへ送信しました。";
+
+      dom.submissionDetail.textContent = [
+        `今回：${formatScore(result.score)}`,
+        `${SCORE_CONFIG.firstLabel}：${formatScore(submitResult.firstScore)}`,
+        `${SCORE_CONFIG.bestLabel}：${formatScore(submitResult.bestScore)}`,
+        `プレイ回数：${submitResult.playCount}回`
+      ].join(" / ");
+    }
+
+    // ============================================================
+    // 14. ランキング取得
+    // ============================================================
+    async function fetchBestRanking() {
+      assertSupabaseReady();
+      return callRpc("get_best_score_ranking", {
+        p_game_slug: GAME_SLUG,
+        p_limit: RANKING_LIMIT
+      });
+    }
+
+    async function fetchFirstRanking() {
+      assertSupabaseReady();
+      return callRpc("get_first_try_ranking", {
+        p_game_slug: GAME_SLUG,
+        p_limit: RANKING_LIMIT
+      });
+    }
+
+    async function fetchPlayStats() {
+      assertSupabaseReady();
+      return callRpc("get_game_play_stats", {
+        p_game_slug: GAME_SLUG
+      });
+    }
+
+    function renderRanking(rows) {
+      const list = Array.isArray(rows) ? rows : [];
+      if (!list.length) {
+        dom.rankingList.textContent = "まだランキングはありません。";
+        return;
+      }
+
+      dom.rankingList.innerHTML = "";
+      const fragment = document.createDocumentFragment();
+      list.slice(0, RANKING_LIMIT).forEach((row, index) => {
+        const rank = row.rank_no ?? row.rank ?? row.rank_number ?? index + 1;
+        const name = row.display_name ?? row.result_display_name ?? row.player_name ?? row.name ?? "ななし";
+        const score = row.best_score ?? row.score ?? row.result_best_score ?? row.first_score ?? 0;
+        const playCount = row.play_count ?? row.result_play_count ?? row.total_play_count;
+        const meta = typeof playCount !== "undefined" ? `<small class="ranking-meta">プレイ回数：${escapeHtml(String(playCount))}回</small>` : "";
+        const div = document.createElement("div");
+        div.className = "ranking-row";
+        div.innerHTML = `<span class="rank-no">${escapeHtml(String(rank))}位</span><span>${escapeHtml(String(name))}${meta}</span><span class="rank-score">${formatScore(score)}</span>`;
+        fragment.appendChild(div);
+      });
+      dom.rankingList.appendChild(fragment);
+    }
+
+    function renderPlayStats(data) {
+      const row = firstRow(data);
+      if (!row) return;
+      const playCount = row.total_play_count ?? row.play_count ?? row.total_plays ?? row.result_play_count;
+      const playerCount = row.player_count ?? row.user_count ?? row.participant_count ?? row.players;
+      const parts = [];
+      if (typeof playCount !== "undefined") parts.push(`合計プレイ回数：${playCount}`);
+      if (typeof playerCount !== "undefined") parts.push(`参加人数：${playerCount}`);
+      dom.playStats.textContent = parts.join(" / ");
+    }
+
+    // ============================================================
+    // 15. シェア
+    // ============================================================
+    function buildHomeShareText() {
+      return `${GAME_TITLE}\n${GAME_DESCRIPTION}\n${PUBLIC_URL}`;
+    }
+
+    function buildResultShareText(result) {
+      if (!result) return buildHomeShareText();
+      return `${GAME_TITLE}\nサンドスコア：${result.score}点\n完成サンドイッチ：${result.sandwiches}個\nきれいな3度一致：${result.perfect}回\n${PUBLIC_URL}`;
+    }
+
+    async function shareText(text) {
+      try {
+        if (navigator.share) {
+          await navigator.share({ text });
+          return;
+        }
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+          toast("シェア文をコピーしました");
+          return;
+        }
+        throw new Error("clipboard unavailable");
+      } catch (error) {
+        if (String(error?.name || "") === "AbortError") return;
+        toast("シェアできませんでした");
+      }
+    }
+
+    // ============================================================
+    // 16. デバッグ
+    // ============================================================
+    function updateDebug(dt) {
+      if (!DEBUG) return;
+      debug.frames += 1;
+      debug.time += dt;
+      if (debug.time >= 0.5) {
+        debug.fps = Math.round(debug.frames / debug.time);
+        debug.frames = 0;
+        debug.time = 0;
+      }
+      const activeParticles = particles.filter((p) => p.active).length;
+      dom.debugPanel.classList.add("active");
+      dom.debugPanel.textContent = [
+        `fps:${debug.fps}`,
+        `mode:${mode}`,
+        `layers:${game.layers.length}`,
+        `particles:${activeParticles}`,
+        `projectile:${projectile.active ? 1 : 0}`,
+        `score:${game.score}`,
+        `time:${game.elapsed.toFixed(1)}`,
+        `canvas:${view.w}x${view.h}`,
+        `rank:${rankingSubmitted ? "sent" : "no"}`
+      ].join("\n");
+    }
+
+    // ============================================================
+    // 17. 起動処理・補助関数
+    // ============================================================
+    function boot() {
+      if (!ctx) {
+        showError("Canvasを使えないため、ゲームを開始できません。");
+        return;
+      }
+      bindEvents();
+      resizeCanvas();
+      drawScene();
+      const savedName = localStorage.getItem(LOCAL_NAME_KEY) || "";
+      dom.playerName.value = savedName;
+      updateAimKnob();
+      if (DEBUG) dom.debugPanel.classList.add("active");
+    }
+
+    function getCurrentFoodProp() {
+      if (game.stepIndex === 1) return INGREDIENTS[game.ingredientIndex] || INGREDIENTS[INGREDIENTS.length - 1];
+      return FOOD_PROPS.bread;
+    }
+
+    function getCurrentFoodLabel() {
+      const prop = getCurrentFoodProp();
+      return `${STEP_LABELS[game.stepIndex]}：${prop.label}`;
+    }
+
+    function getAimTarget() {
+      return {
+        x: aim.x * WORLD.aimRx,
+        y: aim.y * WORLD.aimRy
+      };
+    }
+
+    function getApproxLandingShadow(target, prop) {
+      const softness = 0.72;
+      const wobble = Math.sin(performance.now() / 280) * 0.015;
+      return {
+        x: target.x + wind.dx * wind.value * softness + wobble,
+        y: target.y + wind.dy * wind.value * softness - wobble * 0.6
+      };
+    }
+
+    function createWind(first) {
+      const dir = WIND_DIRECTIONS[Math.floor(Math.random() * WIND_DIRECTIONS.length)];
+      let pool = WIND_STRENGTHS;
+      if (first || game.elapsed < 15) {
+        pool = WIND_STRENGTHS.slice(0, 2);
+      }
+      const strength = pool[Math.floor(Math.random() * pool.length)];
+      const value = strength.min + Math.random() * (strength.max - strength.min);
+      wind.icon = dir.icon;
+      wind.label = dir.label;
+      wind.strength = strength.label;
+      wind.dx = dir.dx;
+      wind.dy = dir.dy;
+      wind.value = value;
+    }
+
+    function emitParticles(x, y, z, color, count) {
+      for (let i = 0; i < count; i += 1) {
+        const p = getFreeParticle();
+        if (!p) return;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.25 + Math.random() * 0.55;
+        p.active = true;
+        p.x = x;
+        p.y = y;
+        p.z = z;
+        p.vx = Math.cos(angle) * speed;
+        p.vy = Math.sin(angle) * speed * 0.65;
+        p.vz = 0.55 + Math.random() * 0.65;
+        p.life = 0.42 + Math.random() * 0.34;
+        p.maxLife = p.life;
+        p.size = 2 + Math.random() * 2.8;
+        p.color = color;
+      }
+    }
+
+    function emitScoreParticle(delta, x, y, z) {
+      const color = delta >= 0 ? "#fff7ad" : "#6a4535";
+      emitParticles(x, y, z, color, Math.min(10, Math.max(4, Math.round(Math.abs(delta) / 16))));
+    }
+
+    function getFreeParticle() {
+      return particles.find((p) => !p.active) || particles[0];
+    }
+
+    function normalizeName(value) {
+      return String(value || "").replace(/[\r\n\t]/g, " ").trim().slice(0, 12);
+    }
+
+    function formatScore(value) {
+      const raw = Number(value) || 0;
+      const scaled = raw / SCORE_CONFIG.scale;
+      const text = SCORE_CONFIG.decimals > 0 ? scaled.toFixed(SCORE_CONFIG.decimals) : String(Math.round(scaled));
+      return `${text}${SCORE_CONFIG.unit}`;
+    }
+
+    function numberOr(value, fallback) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : fallback;
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>'"]/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        "\"": "&quot;"
+      }[char]));
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function roundRect(context, x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      context.beginPath();
+      context.moveTo(x + radius, y);
+      context.lineTo(x + w - radius, y);
+      context.quadraticCurveTo(x + w, y, x + w, y + radius);
+      context.lineTo(x + w, y + h - radius);
+      context.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+      context.lineTo(x + radius, y + h);
+      context.quadraticCurveTo(x, y + h, x, y + h - radius);
+      context.lineTo(x, y + radius);
+      context.quadraticCurveTo(x, y, x + radius, y);
+      context.closePath();
+    }
+
+    boot();
+  })();
+  </script>
+</body>
+</html>
