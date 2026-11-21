@@ -780,11 +780,30 @@
     }
 
     function loadLanguage() {
+      function supportedLocale(value) {
+        if (typeof value !== "string") return undefined;
+        const parts = value.trim().toLowerCase().replaceAll("_", "-").split("-");
+        const [language, ...subtags] = parts;
+        if (language === "zh") {
+          const script = subtags.find(tag => tag === "hans" || tag === "hant");
+          if (script) return script === "hant" ? "zh-Hant" : "zh-Hans";
+          return subtags.some(tag => ["tw", "hk", "mo"].includes(tag)) ? "zh-Hant" : "zh-Hans";
+        }
+        if (language === "pt") return "pt-BR";
+        return Object.hasOwn(LOCALES, language) ? language : undefined;
+      }
       try {
-        const saved = localStorage.getItem(LANGUAGE_KEY);
-        if (Object.hasOwn(LOCALES, saved)) return saved;
+        const saved = supportedLocale(localStorage.getItem(LANGUAGE_KEY));
+        if (saved) return saved;
       } catch {}
-      return "ja";
+      const browser = typeof navigator === "undefined" ? {} : navigator;
+      const preferences = [...(browser.languages || []), browser.language]
+        .filter(value => typeof value === "string" && value.trim());
+      for (const preference of preferences) {
+        const supported = supportedLocale(preference);
+        if (supported) return supported;
+      }
+      return preferences.length ? "en" : "ja";
     }
 
     function applyLanguage(next) {
