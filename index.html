@@ -620,10 +620,10 @@
           <div class="rule-item">皿とサンドイッチには奥行きがあります。中央に近く、安定して乗るほど高得点です。</div>
           <div class="rule-item">風は上下左右と斜めの8方向です。弱・中・強で着地点が変わります。</div>
           <div class="rule-item">食材は無理やり乗りません。支えが足りないと滑ったり、落ちたりします。</div>
-          <div class="rule-item">60秒で最終スコアを競います。ランキング送信は終了時に自動で1回だけ行います。</div>
+          <div class="rule-item">60秒で最終スコアを競います。名前を入れて開始した場合だけ、終了時に今回の記録をランキングへ1回送信します。</div>
         </div>
         <div class="button-grid">
-          <button id="btnRulesToName" class="btn primary" type="button">名前入力へ</button>
+          <button id="btnRulesToName" class="btn primary" type="button">ゲーム開始へ</button>
           <button id="btnRulesBack" class="btn ghost" type="button">ホームへ戻る</button>
         </div>
       </div>
@@ -632,14 +632,14 @@
     <section id="screenName" class="screen">
       <div class="home-stack">
         <div class="card">
-          <h2>名前入力</h2>
-          <p class="lead" style="text-align:left;">ランキングに表示する名前を入力してください。10文字程度がおすすめです。</p>
+          <h2>名前は任意</h2>
+          <p class="lead" style="text-align:left;">ランキングに参加する場合は名前を入力してください。空欄のまま遊べます。</p>
           <input id="playerName" class="name-box" type="text" maxlength="12" autocomplete="nickname" inputmode="text" placeholder="名前を入力">
           <div class="button-grid" style="margin-top:14px;">
-            <button id="btnStartGame" class="btn primary" type="button">この名前で始める</button>
+            <button id="btnStartGame" class="btn primary" type="button">ゲーム開始</button>
             <button id="btnNameBack" class="btn ghost" type="button">ホームへ戻る</button>
           </div>
-          <p class="small-note" style="margin:12px 0 0;">名前はこの端末に保存されます。公式ランキングのスコア本体は端末保存しません。</p>
+          <p class="small-note" style="margin:12px 0 0;">名前を入れて開始すると、保存できる場合にこの端末に記憶します。空欄で遊んでも最後に使った名前は消えません。</p>
         </div>
       </div>
     </section>
@@ -1094,7 +1094,7 @@
       dom.resultOtherGames.href = OTHER_GAMES_URL;
 
       dom.playerName.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") handleStartFromName();
+        if (event.key === "Enter" && !event.isComposing && event.keyCode !== 229 && !event.repeat) handleStartFromName();
       });
 
       dom.aimPad.addEventListener("pointerdown", onAimPointerDown);
@@ -1179,7 +1179,10 @@
     // ============================================================
     // 6. ゲーム初期化
     // ============================================================
+    let nameScreenEpoch = 0;
+
     function showScreen(nextMode) {
+      const focusEpoch = ++nameScreenEpoch;
       stopLoop();
       mode = nextMode;
       Object.values(screens).forEach((screen) => screen.classList.remove("active"));
@@ -1188,23 +1191,43 @@
       if (nextMode === MODE.RULES) screens.rules.classList.add("active");
       if (nextMode === MODE.NAME) {
         screens.name.classList.add("active");
-        const savedName = localStorage.getItem(LOCAL_NAME_KEY) || "";
+        const savedName = readSavedName();
         dom.playerName.value = savedName;
-        setTimeout(() => dom.playerName.focus({ preventScroll: true }), 80);
+        setTimeout(() => {
+          if (mode === MODE.NAME && focusEpoch === nameScreenEpoch) {
+            dom.playerName.focus({ preventScroll: true });
+          }
+        }, 80);
       }
       if (nextMode === MODE.GAME || nextMode === MODE.PLAYING) screens.game.classList.add("active");
       if (nextMode === MODE.RESULT) screens.result.classList.add("active");
       if (nextMode === MODE.ERROR) screens.error.classList.add("active");
     }
 
-    function handleStartFromName() {
-      const name = normalizeName(dom.playerName.value);
-      if (!name) {
-        toast("名前を入力してください");
-        return;
+    let rememberedName;
+
+    function readSavedName() {
+      if (rememberedName !== undefined) return rememberedName;
+      try {
+        return localStorage.getItem(LOCAL_NAME_KEY) || "";
+      } catch {
+        return "";
       }
-      localStorage.setItem(LOCAL_NAME_KEY, name);
-      startGame(name);
+    }
+
+    function rememberName(name) {
+      rememberedName = name;
+      try {
+        localStorage.setItem(LOCAL_NAME_KEY, name);
+      } catch {
+        // Storage can be unavailable; the current play and in-memory choice still work.
+      }
+    }
+
+    function handleStartFromName() {
+      if (mode !== MODE.NAME) return;
+      const name = normalizeName(dom.playerName.value);
+      if (startGame(name) && name) rememberName(name);
     }
 
     function startGame(name) {
@@ -1217,8 +1240,10 @@
         updateHud(true);
         drawScene();
         startLoop();
+        return true;
       } catch (error) {
         showError("ゲームを開始できませんでした。" + String(error?.message || error));
+        return false;
       }
     }
 
@@ -1985,7 +2010,7 @@
       game.score = Math.max(0, Math.round(game.score));
       updateHud(true);
 
-      lastResult = {
+      lastResult = Object.freeze({
         name: game.playerName,
         score: game.score,
         sandwiches: game.sandwichCount,
@@ -1997,7 +2022,7 @@
         retired: Boolean(retired),
         durationMs: Math.round(game.elapsed * 1000),
         reason
-      };
+      });
 
       renderResult(lastResult);
       Object.values(screens).forEach((screen) => screen.classList.remove("active"));
@@ -2012,8 +2037,8 @@
       dom.resultOverhang.textContent = `${result.overhang}回`;
       dom.resultFalls.textContent = `${result.falls}回`;
       dom.resultHeight.textContent = `${result.maxHeight}段`;
-      dom.rankingStatus.textContent = "ランキング送信中です。";
-      dom.submissionDetail.textContent = "今回の記録を送信しています。";
+      dom.rankingStatus.textContent = result.name ? "ランキング送信中です。" : "名前なしのためランキングには登録しません。";
+      dom.submissionDetail.textContent = result.name ? "今回の記録を送信しています。" : "";
       dom.rankingList.textContent = "ランキングを読み込んでいます。";
       dom.playStats.textContent = "";
     }
@@ -2087,37 +2112,50 @@
     // 13. ランキング送信
     // ============================================================
     async function submitAndLoadRanking(result) {
-      if (rankingSubmitted) return;
+      const isCurrent = () => mode === MODE.RESULT && lastResult === result;
+      if (rankingSubmitted || !isCurrent()) return;
       rankingSubmitted = true;
 
-      try {
-        const submitResult = await submitScore(result);
-        lastSubmitResponse = submitResult;
-        renderSubmitResult(submitResult, result);
-      } catch (error) {
-        console.warn(error);
-        dom.rankingStatus.textContent = "ランキング送信に失敗しました。結果はこの画面で確認できます。";
-        dom.submissionDetail.textContent = "通信に失敗したため、今回の記録は画面上の結果だけ確認できます。";
+      if (result.name) {
+        try {
+          const submitResult = await submitScore(result);
+          if (isCurrent()) {
+            lastSubmitResponse = submitResult;
+            renderSubmitResult(submitResult, result);
+          }
+        } catch (error) {
+          console.warn(error);
+          if (isCurrent()) {
+            dom.rankingStatus.textContent = "ランキング送信に失敗しました。結果はこの画面で確認できます。";
+            dom.submissionDetail.textContent = "通信に失敗したため、今回の記録は画面上の結果だけ確認できます。";
+          }
+        }
+      } else {
+        dom.rankingStatus.textContent = "名前なしのためランキングには登録しません。";
+        dom.submissionDetail.textContent = "";
       }
 
+      if (!isCurrent()) return;
       try {
         const ranking = await fetchBestRanking();
-        renderRanking(ranking);
+        if (isCurrent()) renderRanking(ranking);
       } catch (error) {
         console.warn(error);
-        dom.rankingList.textContent = "ランキングを読み込めませんでした。";
+        if (isCurrent()) dom.rankingList.textContent = "ランキングを読み込めませんでした。";
       }
 
+      if (!isCurrent()) return;
       try {
         const stats = await fetchPlayStats();
-        renderPlayStats(stats);
+        if (isCurrent()) renderPlayStats(stats);
       } catch (error) {
         console.warn(error);
-        dom.playStats.textContent = "";
+        if (isCurrent()) dom.playStats.textContent = "";
       }
     }
 
     async function submitScore(result) {
+      if (!result?.name) return null;
       assertSupabaseReady();
       const response = await callRpc("submit_score", {
         p_display_name: result.name,
@@ -2324,7 +2362,7 @@
       bindEvents();
       resizeCanvas();
       drawScene();
-      const savedName = localStorage.getItem(LOCAL_NAME_KEY) || "";
+      const savedName = readSavedName();
       dom.playerName.value = savedName;
       updateAimKnob();
       if (DEBUG) dom.debugPanel.classList.add("active");
