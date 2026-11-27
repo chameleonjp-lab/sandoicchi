@@ -1407,6 +1407,8 @@
         updateHud(true);
         drawScene();
         startLoop();
+        void import(/* @vite-ignore */ "https://chameleonjp-lab.github.io/chameleonjp_lab/play-start.js").then(module => module.recordPlayStart("sandoicchi")).catch(() => {});
+
         return true;
       } catch (error) {
         console.warn(error);
